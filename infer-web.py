@@ -110,27 +110,6 @@ else:
     default_batch_size = 1
 gpus = "-".join([i[0] for i in gpu_infos])
 
-from infer_pack.models import (
-    SynthesizerTrnMs256NSFsid,
-    SynthesizerTrnMs256NSFsid_nono,
-    SynthesizerTrnMs768NSFsid,
-    SynthesizerTrnMs768NSFsid_nono,
-)
-import soundfile as sf
-from fairseq import checkpoint_utils
-import gradio as gr
-import logging
-from vc_infer_pipeline import VC
-from config import Config
-from infer_uvr5 import _audio_pre_, _audio_pre_new
-from my_utils import load_audio
-from train.process_ckpt import show_info, change_info, merge, extract_small_model
-
-gr.close_all()
-config = Config()
-# from trainset_preprocess_pipeline import PreProcess
-logging.getLogger("numba").setLevel(logging.WARNING)
-
 
 class ToolButton(gr.Button, gr.components.FormComponent):
     """Small button with single emoji as text, fits inside gradio forms"""
@@ -170,15 +149,12 @@ for name in os.listdir(weight_root):
 index_paths = []
 for root, dirs, files in os.walk(index_root, topdown=False):
     for name in files:
-        print("file yo:", name)
         if name.endswith(".index") and "trained" not in name:
             index_paths.append("%s/%s" % (root, name))
-print("index_paths yo:", index_paths)
 uvr5_names = []
 for name in os.listdir(weight_uvr5_root):
     if name.endswith(".pth") or "onnx" in name:
         uvr5_names.append(name.replace(".pth", ""))
-print("uvr5_names yo:", uvr5_names)
 
 
 def vc_single(
@@ -1358,7 +1334,7 @@ with gr.Blocks() as app:
                         )
                         input_audio0 = gr.Textbox(
                             label=i18n("输入待处理音频文件路径(默认是正确格式示例)"),
-                            value="_svc_in/blah.wav",
+                            value="_in/blah.wav",
                         )
                         f0method0 = gr.Radio(
                             label=i18n(
@@ -2008,8 +1984,8 @@ with gr.Blocks() as app:
         app.queue(concurrency_count=511, max_size=1022).launch(share=True)
     else:
         app.queue(concurrency_count=511, max_size=1022).launch(
-            server_name="127.0.0.1",
+            server_name="0.0.0.0",
             inbrowser=not config.noautoopen,
-            server_port=8080,
+            server_port=8181,
             quiet=True,
         )
