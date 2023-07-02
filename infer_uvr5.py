@@ -10,12 +10,12 @@ import importlib
 import numpy as np
 import hashlib, math
 from tqdm import tqdm
-from uvr5_pack.lib_v5 import spec_utils
-from uvr5_pack.utils import _get_name_params, inference
-from uvr5_pack.lib_v5.model_param_init import ModelParameters
+from lib.uvr5_pack.lib_v5 import spec_utils
+from lib.uvr5_pack.utils import _get_name_params, inference
+from lib.uvr5_pack.lib_v5.model_param_init import ModelParameters
 import soundfile as sf
-from uvr5_pack.lib_v5.nets_new import CascadedNet
-from uvr5_pack.lib_v5 import nets_61968KB as nets
+from lib.uvr5_pack.lib_v5.nets_new import CascadedNet
+from lib.uvr5_pack.lib_v5 import nets_61968KB as nets
 
 
 class _audio_pre_:
@@ -31,7 +31,7 @@ class _audio_pre_:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters("uvr5_pack/lib_v5/modelparams/4band_v2.json")
+        mp = ModelParameters("lib/uvr5_pack/lib_v5/modelparams/4band_v2.json")
         model = nets.CascadedASPPNet(mp.param["bins"] * 2)
         cpk = torch.load(model_path, map_location="cpu")
         model.load_state_dict(cpk)
@@ -123,14 +123,29 @@ class _audio_pre_:
             else:
                 wav_instrument = spec_utils.cmb_spectrogram_to_wave(y_spec_m, self.mp)
             print("%s instruments done" % name)
-            sf.write(
-                os.path.join(
-                    ins_root,
-                    "instrument_{}_{}.{}".format(name, self.data["agg"], format),
-                ),
-                (np.array(wav_instrument) * 32768).astype("int16"),
-                self.mp.param["sr"],
-            )  #
+            if format in ["wav", "flac"]:
+                sf.write(
+                    os.path.join(
+                        ins_root,
+                        "instrument_{}_{}.{}".format(name, self.data["agg"], format),
+                    ),
+                    (np.array(wav_instrument) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )  #
+            else:
+                path = os.path.join(
+                    ins_root, "instrument_{}_{}.wav".format(name, self.data["agg"])
+                )
+                sf.write(
+                    path,
+                    (np.array(wav_instrument) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+                if os.path.exists(path):
+                    os.system(
+                        "ffmpeg -i %s -vn %s -q:a 2 -y"
+                        % (path, path[:-4] + ".%s" % format)
+                    )
         if vocal_root is not None:
             if self.data["high_end_process"].startswith("mirroring"):
                 input_high_end_ = spec_utils.mirroring(
@@ -142,13 +157,29 @@ class _audio_pre_:
             else:
                 wav_vocals = spec_utils.cmb_spectrogram_to_wave(v_spec_m, self.mp)
             print("%s vocals done" % name)
-            sf.write(
-                os.path.join(
-                    vocal_root, "vocal_{}_{}.{}".format(name, self.data["agg"], format)
-                ),
-                (np.array(wav_vocals) * 32768).astype("int16"),
-                self.mp.param["sr"],
-            )
+            if format in ["wav", "flac"]:
+                sf.write(
+                    os.path.join(
+                        vocal_root,
+                        "vocal_{}_{}.{}".format(name, self.data["agg"], format),
+                    ),
+                    (np.array(wav_vocals) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+            else:
+                path = os.path.join(
+                    vocal_root, "vocal_{}_{}.wav".format(name, self.data["agg"])
+                )
+                sf.write(
+                    path,
+                    (np.array(wav_vocals) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+                if os.path.exists(path):
+                    os.system(
+                        "ffmpeg -i %s -vn %s -q:a 2 -y"
+                        % (path, path[:-4] + ".%s" % format)
+                    )
 
 
 class _audio_pre_new:
@@ -164,7 +195,7 @@ class _audio_pre_new:
             "agg": agg,
             "high_end_process": "mirroring",
         }
-        mp = ModelParameters("uvr5_pack/lib_v5/modelparams/4band_v3.json")
+        mp = ModelParameters("lib/uvr5_pack/lib_v5/modelparams/4band_v3.json")
         nout = 64 if "DeReverb" in model_path else 48
         model = CascadedNet(mp.param["bins"] * 2, nout)
         cpk = torch.load(model_path, map_location="cpu")
@@ -259,14 +290,29 @@ class _audio_pre_new:
             else:
                 wav_instrument = spec_utils.cmb_spectrogram_to_wave(y_spec_m, self.mp)
             print("%s instruments done" % name)
-            sf.write(
-                os.path.join(
-                    ins_root,
-                    "main_vocal_{}_{}.{}".format(name, self.data["agg"], format),
-                ),
-                (np.array(wav_instrument) * 32768).astype("int16"),
-                self.mp.param["sr"],
-            )  #
+            if format in ["wav", "flac"]:
+                sf.write(
+                    os.path.join(
+                        ins_root,
+                        "instrument_{}_{}.{}".format(name, self.data["agg"], format),
+                    ),
+                    (np.array(wav_instrument) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )  #
+            else:
+                path = os.path.join(
+                    ins_root, "instrument_{}_{}.wav".format(name, self.data["agg"])
+                )
+                sf.write(
+                    path,
+                    (np.array(wav_instrument) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+                if os.path.exists(path):
+                    os.system(
+                        "ffmpeg -i %s -vn %s -q:a 2 -y"
+                        % (path, path[:-4] + ".%s" % format)
+                    )
         if vocal_root is not None:
             if self.data["high_end_process"].startswith("mirroring"):
                 input_high_end_ = spec_utils.mirroring(
@@ -278,13 +324,29 @@ class _audio_pre_new:
             else:
                 wav_vocals = spec_utils.cmb_spectrogram_to_wave(v_spec_m, self.mp)
             print("%s vocals done" % name)
-            sf.write(
-                os.path.join(
-                    vocal_root, "others_{}_{}.{}".format(name, self.data["agg"], format)
-                ),
-                (np.array(wav_vocals) * 32768).astype("int16"),
-                self.mp.param["sr"],
-            )
+            if format in ["wav", "flac"]:
+                sf.write(
+                    os.path.join(
+                        vocal_root,
+                        "vocal_{}_{}.{}".format(name, self.data["agg"], format),
+                    ),
+                    (np.array(wav_vocals) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+            else:
+                path = os.path.join(
+                    vocal_root, "vocal_{}_{}.wav".format(name, self.data["agg"])
+                )
+                sf.write(
+                    path,
+                    (np.array(wav_vocals) * 32768).astype("int16"),
+                    self.mp.param["sr"],
+                )
+                if os.path.exists(path):
+                    os.system(
+                        "ffmpeg -i %s -vn %s -q:a 2 -y"
+                        % (path, path[:-4] + ".%s" % format)
+                    )
 
 
 if __name__ == "__main__":
