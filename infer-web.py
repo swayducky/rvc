@@ -1648,7 +1648,7 @@ with gr.Blocks() as app:
                 )
                 with gr.Row():
                     trainset_dir4 = gr.Textbox(
-                        label=i18n("输入训练文件夹路径"), value="_in_rvc_train/davidsacks/"
+                        label=i18n("输入训练文件夹路径"), value="_in.rvc_train/davidsacks/"
                     )
                     spk_id5 = gr.Slider(
                         minimum=0,
